@@ -9,7 +9,7 @@
       description: "criar um novo banco"
       label: "Mongo DB Name:"
       required: true
-      default: 'db-teste'
+      default: "db-teste"
       type: "string"
 
     - variable: "mongo-client-port"
