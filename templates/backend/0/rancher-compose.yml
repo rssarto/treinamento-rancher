@@ -1,0 +1,64 @@
+.catalog:
+  name: backend
+  version: b001
+  description: backend do catalogo
+  uuid: backend-1
+  minimum_rancher_version: 1.6
+  questions:
+    - variable: "mongo-db-name"
+      description: "criar um novo banco"
+      label: "Mongo DB Name:"
+      required: true
+      default: 'db-teste'
+      type: "string"
+
+    - variable: "mongo-client-port"
+      description: "passar a porta do mongo client"
+      label: "Mongo Client Port:"
+      required: true
+      default: 2000
+      type: "int"
+
+    - variable: "nodered-port"
+      description: "passar a porta do node-red"
+      label: "NodeRed Port:"
+      required: true
+      default: 2001
+      type: "int"
+
+version: '2'
+services:
+  mongo-db:
+    scale: 1
+    start_on_create: true
+  balance:
+    scale: 1
+    start_on_create: true
+    lb_config:
+      certs: []
+      port_rules:
+      - priority: 1
+        protocol: http
+        service: mongo-client
+        source_port: ${mongo-client-port}
+        target_port: 3000
+      - priority: 2
+        protocol: http
+        service: node-red
+        source_port: ${nodered-port}
+        target_port: 1880
+    health_check:
+      healthy_threshold: 2
+      response_timeout: 2000
+      port: 42
+      unhealthy_threshold: 3
+      initializing_timeout: 60000
+      interval: 2000
+      strategy: recreate
+      reinitializing_timeout: 60000
+  mongo-client:
+    scale: 1
+    start_on_create: true
+  node-red:
+    scale: 1
+    start_on_create: true

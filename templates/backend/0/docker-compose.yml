@@ -1,0 +1,39 @@
+version: '2'
+volumes:
+  vol-mongo:
+    driver: local
+  vol-nodered:
+    driver: local
+services:
+  mongo-db:
+    image: mongo:3.6-jessie
+    environment:
+      MONGO_INITDB_DATABASE: ${mongo-db-name}
+    volumes:
+    - vol-mongo:/data/db:rw
+    labels:
+      io.rancher.scheduler.affinity:host_label: group=hosts
+  balance:
+    image: rancher/lb-service-haproxy:v0.9.1
+    ports:
+    - ${mongo-client-port}:${mongo-client-port}/tcp
+    - ${nodered-port}:${nodered-port}/tcp
+    labels:
+      io.rancher.scheduler.affinity:host_label: group=hosts
+      io.rancher.container.agent.role: environmentAdmin,agent
+      io.rancher.container.agent_service.drain_provider: 'true'
+      io.rancher.container.create_agent: 'true'
+  mongo-client:
+    image: mongoclient/mongoclient
+    environment:
+      MONGO_URL: mongodb://mongo-db:27017
+    links:
+    - mongo-db:mongo-db
+    labels:
+      io.rancher.scheduler.affinity:host_label: group=hosts
+  node-red:
+    image: robsonsimonassi/nodered
+    volumes:
+    - vol-nodered:/data:rw
+    links:
+    - mongo-db:mongo-db
